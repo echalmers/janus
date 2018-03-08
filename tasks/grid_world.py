@@ -4,10 +4,10 @@ from matplotlib import pyplot
 
 class BasicGridWorld(AbstractTask):
 
-    actions = {'up': [0,-1],
-               'down': [0,1],
-               'left': [-1,0],
-               'right': [1,0]}
+    actions = {'left': [0,-1],
+               'right': [0,1],
+               'up': [-1,0],
+               'down': [1,0]}
 
     square_types = {'wall': {'frequency': 0.1,
                              'color': [0,0,255],

@@ -21,11 +21,9 @@ reward_history = episode.run(num_steps=1000)
 random_states = set()
 while len(random_states) < 5:
     random_states.add(random.choice(random.choice(grid_world.grid)))
+random_states.add(grid_world.grid[8][9])
 for state in random_states:
     print('allocentric state: ' + str(state.coordinates) + ', predicted sensory = ' +
           str(agent.allocentric_sensory_association.predict_sensory(state)))
 
-plt.figure()
-# plt.plot(np.cumsum(reward_history))
-plt.show()
 
