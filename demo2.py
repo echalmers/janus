@@ -15,7 +15,7 @@ agent = EgoAlloLearner()
 agent.set_policy(EGreedyPolicy(epsilon=0.9))
 
 episode = Episode(agent=agent, task=SensoryGridWorld(grid_world))
-reward_history = episode.run(num_steps=1000)
+reward_history = episode.run(num_steps=3000)
 
 # randomly sample some allocentric states and get the agent to predict what sensory data it will get there
 random_states = set()
