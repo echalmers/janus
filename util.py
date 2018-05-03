@@ -82,5 +82,6 @@ class Episode:
                          new_allowed_actions=allowed_actions)
             current_state = new_state
             print('step {step}, cumulative reward = {rew}'.format(step=i, rew=sum(reward_history)))
+            self.task.display()
 
         return reward_history

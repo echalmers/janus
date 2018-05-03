@@ -7,8 +7,9 @@ from util import NominalToBinary
 from tasks.abstract_task import AbstractTask
 from policies.basic_policies import EGreedyPolicy
 import numpy as np
+import json
 
-class OriginalEgoAllo(AbstractAgent):
+class EgoAlloLearner(AbstractAgent):
 
     def __init__(self, memory_depth=1000):
 
@@ -18,6 +19,8 @@ class OriginalEgoAllo(AbstractAgent):
         self.ego_system = EgocentricLearningSystem()
         self.memory = []
         self.memory_depth = memory_depth
+
+        self.allocentric_sensory_association = AllocentricSensoryAssociativeMemory()
 
         self.total_updates = 0
 
@@ -70,6 +73,9 @@ class OriginalEgoAllo(AbstractAgent):
 
             self.ego_system.fit(state_action_instances, rewards, allocentric_changes)
 
+        # update the associative memory
+        self.allocentric_sensory_association.update(state['allocentric'], state['sensory'])
+
         self.total_updates += 1
 
     def get_allocentric_change(self, oldstate, newstate):
@@ -77,6 +83,38 @@ class OriginalEgoAllo(AbstractAgent):
         old_coords = oldstate['allocentric'].coordinates
         return [new_coords[0] - old_coords[0], new_coords[1] - old_coords[1]]
 
+
+class AllocentricSensoryAssociativeMemory:
+
+    def __init__(self):
+        self.memory = dict()
+
+    # update associative memory
+    def update(self, allo_state, sensory):
+        sensory_as_string = json.dumps(sensory)
+
+        if allo_state not in self.memory:
+            self.memory[allo_state] = dict()
+
+        if sensory_as_string not in self.memory[allo_state]:
+            self.memory[allo_state] = {sensory_as_string: 1}
+        else:
+            self.memory[allo_state][sensory_as_string] += 1
+
+    # predict a sensory experience for a given allocentric state by sampling from the distribution of previous
+    # experiences in that state
+    def predict_sensory(self, allo_state):
+        if allo_state not in self.memory:
+            return None
+
+        distribution = self.memory[allo_state]
+        total_experiences = sum([x[1] for x in distribution.items()])
+        p = np.random.random() * total_experiences
+        for experience in distribution:
+            if distribution[experience] >= p:
+                return json.loads(experience)
+            else:
+                p -= distribution[experience]
 
 
 class EgocentricLearningSystem:

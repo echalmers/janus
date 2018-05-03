@@ -1,13 +1,15 @@
 from tasks.abstract_task import AbstractTask
 import numpy as np
 from matplotlib import pyplot
+from multiprocessing import Process, Pipe, Queue
+import time
 
 class BasicGridWorld(AbstractTask):
 
-    actions = {'up': [0,-1],
-               'down': [0,1],
-               'left': [-1,0],
-               'right': [1,0]}
+    actions = {'left': [0,-1],
+               'right': [0,1],
+               'up': [-1,0],
+               'down': [1,0]}
 
     square_types = {'wall': {'frequency': 0.1,
                              'color': [0,0,255],
@@ -50,6 +52,11 @@ class BasicGridWorld(AbstractTask):
 
 
     def __init__(self):
+
+        # create a separate process to use for plotting
+        self.display_q = Queue()
+        self.display_proc = Process(target=show_image, args=[self.display_q,])
+        self.display_proc.start()
 
         # generate a random grid
         self.grid = np.random.choice(list(self.square_types.keys()),
@@ -114,12 +121,26 @@ class BasicGridWorld(AbstractTask):
                     rgb[i][j][:] = self.goal_types[square_type]['color']
         rgb[self._current_state.coordinates[0]][self._current_state.coordinates[1]][:] = 0
 
-        pyplot.imshow(rgb/255)
+        self.display_q.put(rgb/255)
+
+
+def show_image(q):
+    while True:
+        while q.qsize() == 0:
+            pyplot.pause(0.1)
+        image = None
+        while q.qsize() > 0:
+            image = q.get()
+        pyplot.imshow(image)
+
 
 class SensoryGridWorld:
 
     def __init__(self, basicGridWorld):
         self.gridworld = basicGridWorld
+
+    def display(self):
+        self.gridworld.display()
 
     def execute_action(self, action):
         return self.gridworld.execute_action(action)
@@ -143,8 +164,9 @@ class SensoryGridWorld:
 
 
 if __name__ == "__main__":
-    gw = SensoryGridWorld()
-    gw.display()
+    basicGW = BasicGridWorld()
+    gw = SensoryGridWorld(basicGW)
+    basicGW.display()
 
     for i in range(0,100):
 
@@ -153,6 +175,7 @@ if __name__ == "__main__":
         print(state['sensory'])
         act = input('action: ')
         gw.execute_action(act)
+        basicGW.display()
 
 
 
